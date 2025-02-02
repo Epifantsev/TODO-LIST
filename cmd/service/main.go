@@ -22,10 +22,10 @@ func main() {
 
 	dbPath := databaseFileExist()
 
-	db := db.New(dbPath)
-	defer db.Close()
+	dBase := db.New(dbPath)
+	defer dBase.Close()
 
-	repo := repository.New(db)
+	repo := repository.New(dBase)
 	migration(repo)
 
 	handler := handlers.New(repo)
@@ -45,8 +45,10 @@ func main() {
 	r.Get("/api/tasks", handler.GetTasks)
 	r.Get("/api/task", handler.GetTask)
 
+	log.Printf("Сервер успешно запущен на порту %s\n", port)
+
 	if err := http.ListenAndServe(port, r); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }
 
@@ -67,17 +69,21 @@ func databaseFileExist() string {
 	if !ok {
 		appPath, err = os.Executable()
 		if err != nil {
-			return err.Error()
+			log.Fatal(err)
 		}
 	}
 
 	dbFile := filepath.Join(filepath.Dir(appPath), "scheduler.db")
 
 	_, err = os.Stat(dbFile)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+
+	if os.IsNotExist(err) {
 		_, err = os.Create(dbFile)
 		if err != nil {
-			return err.Error()
+			log.Fatal(err)
 		}
 	}
 	return dbFile

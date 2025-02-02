@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"final_task/internal/config"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -16,25 +18,32 @@ func (h *Handler) GetTask(w http.ResponseWriter, r *http.Request) {
 
 	if idString == "" {
 		answer.Err = "id is required"
-		ResponWithError(w, http.StatusBadRequest, answer)
+		RespondWithError(w, http.StatusBadRequest, answer)
 		return
 	}
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
 		answer.Err = "conversion error"
-		ResponWithError(w, http.StatusBadRequest, answer)
+		RespondWithError(w, http.StatusBadRequest, answer)
 		return
 	}
 
 	if err := h.repo.GetTask(id, &task); err != nil {
-		answer.Err = "row scan error"
-		ResponWithError(w, http.StatusNotFound, answer)
+		answer.Err = err.Error()
+		RespondWithError(w, http.StatusNotFound, answer)
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(task); err != nil {
-		http.Error(w, "serialization error", http.StatusInternalServerError)
+	var buf bytes.Buffer
+
+	if err := json.NewEncoder(&buf).Encode(task); err != nil {
+		answer.Err = err.Error()
+		RespondWithError(w, http.StatusInternalServerError, answer)
 		return
+	}
+
+	if _, err := w.Write(buf.Bytes()); err != nil {
+		log.Printf("Error sending response \"get task\": %v", err)
 	}
 }

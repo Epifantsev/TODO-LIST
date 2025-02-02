@@ -51,7 +51,7 @@ func daysInMonth(now time.Time) int {
 	nextMonth := 1
 	year := now.Year()
 
-	if nextMonth > 12 {
+	if nextMonth == 12 {
 		nextMonth = 1
 		year++
 	}

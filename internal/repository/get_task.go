@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"final_task/internal/config"
-	"fmt"
 )
 
 func (r *Repository) GetTask(id int, task *config.Task) error {
@@ -11,7 +10,6 @@ func (r *Repository) GetTask(id int, task *config.Task) error {
 		sql.Named("id", id))
 
 	if err := row.Scan(&task.Id, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
-		err = fmt.Errorf("row scan error")
 		return err
 	}
 
